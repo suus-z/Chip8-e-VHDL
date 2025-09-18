@@ -29,7 +29,7 @@ architecture rtl of timer is
         process(clk, rst)
         begin
 
-            if rst = '1' then
+            if rst = '0' then
                 counter <= 0;
                 s_u_s     <= (others => '0');
                 m_u_s     <= (others => '0');

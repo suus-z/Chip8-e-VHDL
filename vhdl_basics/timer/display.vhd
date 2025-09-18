@@ -2,10 +2,11 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity display is
     port(
-        a           : in std_logic_vector (3 downto 0);
+        a           : in unsigned(3 downto 0);
         m           : in std_logic;
         s           : out std_logic_vector (6 downto 0)
     );
