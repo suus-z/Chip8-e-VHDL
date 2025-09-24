@@ -12,6 +12,8 @@ entity registers is
         we_v    :   in std_logic;
         we_i    :   in std_logic;
         we_pc   :   in std_logic;
+        we_dt   :   in std_logic;
+        we_st   :   in std_logic;
 
         --V registers control
         v_addr  :   in std_logic_vector(3 downto 0);
@@ -25,6 +27,14 @@ entity registers is
         --PC (program counter)
         pc_din   :   in std_logic_vector(11 downto 0);
         pc_dout  :   out std_logic_vector(11 downto 0);
+
+        --DT (delay timer)
+        dt_din   :   in std_logic_vector(7 downto 0);
+        dt_dout  :   out std_logic_vector(7 downto 0);
+
+        --ST (sound timer)
+        st_din   :   in std_logic_vector(7 downto 0);
+        st_dout  :   out std_logic_vector(7 downto 0);
 
         --Stack functions
         push     :   in std_logic;
@@ -42,13 +52,30 @@ architecture arch_reg of registers is
 
     signal i_reg     :   std_logic_vector(11 downto 0);
     signal pc_reg    :   std_logic_vector(11 downto 0);
+    signal dt_reg    :   std_logic_vector(7 downto 0);
+    signal st_reg    :   std_logic_vector(7 downto 0);
+
+    component tick_60Hz is
+        port(
+        clk     : in  std_logic;
+        reset   : in  std_logic;
+        tick_60Hz : out std_logic
+        );
+    end component tick_60Hz;
+
+    signal tick_60Hz_s :  std_logic;
 
 begin
+
+    inst_tick_60Hz: tick_60Hz port map(clk, reset, tick_60Hz_s);
+
     process(reset, clk)
     begin
         if reset = '0' then
             i_reg     <= (others => '0');
             pc_reg    <= (others => '0');
+            dt_reg    <= (others => '0');
+            st_reg    <= (others => '0');
             stack_ptr <= (others => '0');
 
         elsif rising_edge(clk) then
@@ -68,6 +95,24 @@ begin
                 pc_reg <= pc_din;
             end if;
 
+            -- Write DT
+            if we_dt = '1' then
+                dt_reg <= dt_din;
+            elsif tick_60Hz_s = '1' then
+                if dt_reg > "00000000" then
+                    dt_reg <= std_logic_vector(unsigned(dt_reg) - 1);
+                end if;
+            end if;
+
+            -- Write ST
+            if we_st = '1' then
+                st_reg <= st_din;
+            elsif tick_60Hz_s = '1' then
+                if st_reg > "00000000" then
+                    st_reg <= std_logic_vector(unsigned(st_reg) - 1);
+                end if;
+            end if;
+
             -- Push
             if push = '1' then
                 stack(to_integer(stack_ptr)) <= pc_reg;
@@ -84,5 +129,7 @@ begin
     v_dout  <= v_reg(to_integer(unsigned(v_addr)));
     i_dout  <= i_reg;
     pc_dout <= pc_reg;
+    dt_dout <= dt_reg;
+    st_dout <= st_reg;
 
 end arch_reg;
