@@ -25,8 +25,8 @@ entity registers is
         i_dout  :   out std_logic_vector(11 downto 0);
 
         --PC (program counter)
-        pc_din   :   in std_logic_vector(11 downto 0);
-        pc_dout  :   out std_logic_vector(11 downto 0);
+        pc_din   :   in std_logic_vector(15 downto 0);
+        pc_dout  :   out std_logic_vector(15 downto 0);
 
         --DT (delay timer)
         dt_din   :   in std_logic_vector(7 downto 0);
@@ -51,7 +51,7 @@ architecture arch_reg of registers is
     signal stack_ptr :   unsigned(3 downto 0)   := (others => '0');
 
     signal i_reg     :   std_logic_vector(11 downto 0);
-    signal pc_reg    :   std_logic_vector(11 downto 0);
+    signal pc_reg    :   std_logic_vector(15 downto 0);
     signal dt_reg    :   std_logic_vector(7 downto 0);
     signal st_reg    :   std_logic_vector(7 downto 0);
 
@@ -98,19 +98,15 @@ begin
             -- Write DT
             if we_dt = '1' then
                 dt_reg <= dt_din;
-            elsif tick_60Hz_s = '1' then
-                if dt_reg > "00000000" then
+            elsif tick_60Hz_s = '1' and dt_reg > "00000000"then
                     dt_reg <= std_logic_vector(unsigned(dt_reg) - 1);
-                end if;
             end if;
 
             -- Write ST
             if we_st = '1' then
                 st_reg <= st_din;
-            elsif tick_60Hz_s = '1' then
-                if st_reg > "00000000" then
+            elsif tick_60Hz_s = '1' and st_reg > "00000000" then
                     st_reg <= std_logic_vector(unsigned(st_reg) - 1);
-                end if;
             end if;
 
             -- Push
@@ -119,8 +115,8 @@ begin
                 stack_ptr <= stack_ptr + 1;
             -- Pop
             elsif pop = '1' then
-                stack_ptr <= stack_ptr - 1;
                 pc_reg <= stack(to_integer(stack_ptr - 1));
+                stack_ptr <= stack_ptr - 1;
             end if;
 
         end if;
