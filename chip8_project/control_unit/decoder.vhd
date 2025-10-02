@@ -7,13 +7,13 @@ use work.instructions_constants.all;
 entity decoder is
     port(
         opcode  : in  std_logic_vector(15 downto 0);
-        -- extracted fields
+        --extracted fields
         nnn     : out std_logic_vector(11 downto 0);
         kk      : out std_logic_vector(7 downto 0);
         x       : out std_logic_vector(3 downto 0);
         y       : out std_logic_vector(3 downto 0);
         n       : out std_logic_vector(3 downto 0);
-        -- decoded instruction code
+        --decoded instruction code
         instr   : out std_logic_vector(5 downto 0);
         illegal : out std_logic
     );
@@ -22,17 +22,17 @@ end decoder;
 architecture rtl of decoder is
 begin
 
-    -- extract basic fields
+    --extract basic fields
     nnn <= opcode(11 downto 0);
     kk  <= opcode(7 downto 0);
     x   <= opcode(11 downto 8);
     y   <= opcode(7 downto 4);
     n   <= opcode(3 downto 0);
 
-    -- combinational decode
+    --combinational decode
     process(opcode)
     begin
-        -- defaults
+        --defaults
         instr   <= I_ILLEGAL;
         illegal <= '1';
 
@@ -72,7 +72,6 @@ begin
                 instr <= I_ADD_Vx_kk; illegal <= '0'; -- 7xkk
 
             when "1000" =>
-                -- many subops determined by lowest nibble
                 case opcode(3 downto 0) is
                     when "0000" => instr <= I_LD_Vx_Vy;
                     when "0001" => instr <= I_OR;

@@ -20,6 +20,12 @@ entity registers is
         v_din   :   in std_logic_vector(7 downto 0);
         v_dout  :   out std_logic_vector(7 downto 0);
 
+        v_addr_x :  in std_logic_vector(3 downto 0);
+        v_dout_x :  out std_logic_vector(7 downto 0);
+
+        v_addr_y :  in std_logic_vector(3 downto 0);
+        v_dout_y :  out std_logic_vector(7 downto 0);
+
         --I register control
         i_din   :   in std_logic_vector(11 downto 0);
         i_dout  :   out std_logic_vector(11 downto 0);
@@ -123,6 +129,9 @@ begin
     end process;
 
     v_dout  <= v_reg(to_integer(unsigned(v_addr)));
+    v_dout_x <= v_reg(to_integer(unsigned(v_addr_x)));
+    v_dout_y <= v_reg(to_integer(unsigned(v_addr_y)));
+    
     i_dout  <= i_reg;
     pc_dout <= pc_reg;
     dt_dout <= dt_reg;
