@@ -3,4 +3,6 @@ package ram_constants is
     constant system_data_size   : integer := 432;   --Memory block for other system data        (0x050 to 0x1FF)
     constant prog_limit_size    : integer := 3328;  --Memory block for programs                 (0x200 to 0xEFF)
     constant display_size       : integer := 256;   --Memory block for the VGA display          (0xF00 to 0xFFF)
+
+    constant display_init_addr  : integer := 16#F00#;
 end package ram_constants;

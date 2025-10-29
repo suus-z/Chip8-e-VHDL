@@ -1,4 +1,4 @@
---RAM 4KB
+--RAM 4KB dual-port
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -11,11 +11,17 @@ entity ram is
   );
 
   port (
-    clk  : in std_logic;
-    we   : in std_logic;
-    addr : in std_logic_vector(addr_width - 1 downto 0);
-    din  : in std_logic_vector(data_width - 1 downto 0);
-    dout : out std_logic_vector(data_width - 1 downto 0)
+    --A port
+    clk_a  : in std_logic;
+    we     : in std_logic;
+    addr_a : in std_logic_vector(addr_width - 1 downto 0);
+    din    : in std_logic_vector(data_width - 1 downto 0);
+    dout_a : out std_logic_vector(data_width - 1 downto 0);
+
+    --B port
+    clk_b  : in std_logic;
+    addr_b : in std_logic_vector(addr_width - 1 downto 0);
+    dout_b : out std_logic_vector(data_width - 1 downto 0)
   );
 end ram;
 
@@ -44,19 +50,29 @@ architecture ram_arch of ram is
   attribute ram_style              : string;
   attribute ram_style of ram_block : signal is "block";
 
+  attribute ramstyle : string;
+  attribute ramstyle of ram_block : signal is "no_rw_check, M9K";
+
   attribute ram_init_file              : string;
   attribute ram_init_file of ram_block : signal is "invaders.mif";
 
 begin
 
-  process (clk)
+  process (clk_a)
   begin
-    if rising_edge(clk) then
-      if we = '1' and unsigned(addr) >= font_size then
-        ram_block(to_integer(unsigned(addr))) <= din;
+    if rising_edge(clk_a) then
+      if we = '1' and unsigned(addr_a) >= font_size then
+        ram_block(to_integer(unsigned(addr_a))) <= din;
       end if;
 
-      dout <= ram_block(to_integer(unsigned(addr)));
+      dout_a <= ram_block(to_integer(unsigned(addr_a)));
+    end if;
+  end process;
+
+  process (clk_b)
+  begin
+    if rising_edge(clk_b) then
+      dout_b <= ram_block(to_integer(unsigned(addr_b)));
     end if;
   end process;
 
