@@ -1,4 +1,4 @@
---FSM of control unit, needs to be conected to alu, registers, ram, bcd_convert, rand_generate, keyboard and framebuffer in the top-level
+--FSM of control unit
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -12,7 +12,7 @@ entity control_fsm is
 
         --Inputs from chip-8 top-level
         pc_in           : in  std_logic_vector(11 downto 0);
-        i_reg_in        : in  std_logic_vector(15 downto 0);
+        i_reg_in        : in  std_logic_vector(11 downto 0);
         instr_code      : in  std_logic_vector(5 downto 0); --from decoder
         ram_dout        : in  std_logic_vector(7 downto 0);
         nnn             : in  std_logic_vector(11 downto 0);
@@ -51,9 +51,14 @@ entity control_fsm is
 
         font_addr_en    : out std_logic; --for LD F, Vx
 
-        pc_load_en      : out std_logic;
+        pc_load_en      : out std_logic; --load PC from immediate nnn (pc_load_nnn_en)
         pc_inc_en       : out std_logic;
+        pc_skip_en      : out std_logic;
         pc_addr_out     : out std_logic_vector(11 downto 0);
+
+        -- New control outputs to match registers entity
+        pc_ret_en       : out std_logic; -- request PC load from stack (RET)
+        pc_jump_v0_en   : out std_logic; -- request PC = nnn + V0 (JP V0)
 
         reg_read_en     : out std_logic;
         reg_write_en    : out std_logic;
@@ -66,11 +71,11 @@ entity control_fsm is
         i_data_in       : out std_logic_vector(15 downto 0);
         i_inc_en        : out std_logic;
 
-        alu_op          : out std_logic_vector(3 downto 0)
+        alu_op          : out std_logic_vector(5 downto 0)
     );
 end entity control_fsm;
 
-architecture behavioral of control_fsm is
+architecture arch_control_fsm of control_fsm is
     --States definition
     type state_type is (S_FETCH, S_DECODE,S_READ_REGS, S_EXECUTE,
         S_LD_I_VX_INIT, 
@@ -102,7 +107,7 @@ begin
             current_state <= next_state;
 
             if current_state = S_LD_I_VX_INIT or current_state = S_LD_VX_I_INIT then
-                i_reg_addr_internal <= i_reg_in(11 downto 0);  
+                i_reg_addr_internal <= i_reg_in;  
                 reg_counter <= (others => '0');
 
             elsif current_state = S_LD_I_VX_WRITE or current_state = S_LD_VX_I_READ or current_state = S_LD_B_VX_0 or current_state = S_LD_B_VX_1 or current_state = S_LD_B_VX_2 then
@@ -130,7 +135,12 @@ begin
 
         pc_load_en      <= '0';
         pc_inc_en       <= '0';
+        pc_skip_en      <= '0';
         pc_addr_out     <= (others => '0');
+
+        -- defaults for new outputs
+        pc_ret_en       <= '0';
+        pc_jump_v0_en   <= '0';
 
         reg_read_en     <= '0';
         reg_write_en    <= '0';
@@ -199,9 +209,9 @@ begin
 
                     --RET
                     when I_RET =>
-                        pc_load_en   <= '1';
-                        pc_addr_out  <= std_logic_vector(resize(unsigned(ram_dout), 12));
+                        -- Request pop from stack and let registers unit set PC from stack
                         stack_pop_en <= '1';
+                        pc_ret_en    <= '1';
                         next_state <= S_FETCH;
 
                     --CALL
@@ -227,7 +237,7 @@ begin
                     --SE Vx, kk
                     when I_SE_Vx_kk =>
                         if reg_data_x = kk then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -235,7 +245,7 @@ begin
                     --SNE Vx, kk
                     when I_SNE_Vx_kk =>
                         if reg_data_x /= kk then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -243,7 +253,7 @@ begin
                     --SE Vx, Vy
                     when I_SE_Vx_Vy =>
                         if reg_data_x = reg_data_y then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -251,7 +261,7 @@ begin
                     --SNE Vx, Vy
                     when I_SNE_Vx_Vy =>
                         if reg_data_x /= reg_data_y then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -260,7 +270,7 @@ begin
                     when I_SKP =>
                         key_check_en <= '1';
                         if key_pressed = '1' and std_logic_vector(resize(unsigned(key_value_in), 8)) = reg_data_x then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -269,7 +279,7 @@ begin
                     when I_SKNP =>
                         key_check_en <= '1';
                         if key_pressed = '0' or std_logic_vector(resize(unsigned(key_value_in), 8)) /= reg_data_x then
-                            pc_inc_en <= '1';
+                            pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
                         next_state <= S_FETCH;
@@ -331,7 +341,7 @@ begin
 
                     --LD Vx, I
                     when I_LD_Vx_I =>
-                        next_state <= S_LD_Vx_I_INIT;
+                        next_state <= S_LD_VX_I_INIT;
 
                     --LD Vx, K
                     when I_LD_Vx_K =>
@@ -348,12 +358,14 @@ begin
                     when I_JP =>
                         pc_load_en  <= '1';
                         pc_addr_out <= nnn;
+                        next_state <= S_FETCH;
 
+                    --JP V0 : use registers block to perform nnn + V0
                     when I_JP_V0 =>
-                        reg_read_addr_x <= (others => '0');
-                        pc_load_en  <= '1';
-                        pc_addr_out <= std_logic_vector(unsigned(nnn) + unsigned(resize(unsigned(reg_data_x), 12)));
-
+                        -- Request V0 read (addr 0) and signal jump_v0 to registers
+                        reg_read_addr_x <= (others => '0'); -- ensure V0 is read (top-level should route V0 back if needed)
+                        pc_jump_v0_en <= '1';
+                        next_state <= S_FETCH;
 
                     --ALU instructions
                     when I_ADD_Vx_Vy | I_SUB | I_SUBN | I_OR | I_AND | I_XOR | I_SHR | I_SHL | I_ADD_Vx_kk | I_ADD_I_Vx =>
@@ -444,7 +456,7 @@ begin
                 --Multi-cycle: LD Vx, I
                 when S_LD_VX_I_INIT =>
                     ram_read_en  <= '1';
-                    ram_addr_out <= i_reg_in(11 downto 0);
+                    ram_addr_out <= i_reg_in;
                     next_state   <= S_LD_VX_I_READ;
 
                 when S_LD_VX_I_READ =>
@@ -464,4 +476,4 @@ begin
 
         end case;
     end process;
-end behavioral;
+end arch_control_fsm;

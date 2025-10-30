@@ -67,27 +67,6 @@ architecture arch_vga_fb_controller of vga_fb_controller is
     signal ram_byte_data       : std_logic_vector(7 downto 0);
     signal rgb_int             : std_logic_vector(23 downto 0);
 
-    -- Variáveis auxiliares de shift
-    function shift_left (vec : std_logic_vector; amount : integer; fill : std_logic) return std_logic_vector is
-        variable res : std_logic_vector(vec'range);
-    begin
-        if amount > vec'length then return (others => fill); end if;
-        if amount = 0 then return vec; end if;
-        res(vec'high - amount downto vec'low) := vec(vec'high downto vec'low + amount);
-        res(vec'low + amount - 1 downto vec'low) := (others => fill);
-        return res;
-    end function;
-
-    function shift_right (vec : std_logic_vector; amount : integer; fill : std_logic) return std_logic_vector is
-        variable res : std_logic_vector(vec'range);
-    begin
-        if amount > vec'length then return (others => fill); end if;
-        if amount = 0 then return vec; end if;
-        res(vec'high downto vec'low + amount) := vec(vec'high - amount downto vec'low);
-        res(vec'low + amount - 1 downto vec'low) := (others => fill);
-        return res;
-    end function;
-
 begin
 
     ----------------------------------------------------
@@ -205,8 +184,10 @@ begin
                     state <= DRW_WRITE_1;
 
                 when DRW_WRITE_1 =>
-                    sprite_left_shifted := shift_left(current_sprite_byte, to_integer(x_bit_offset), '0');
-                    collision_part := ram_dout_a and sprite_left_shifted;
+                    sprite_left_shifted := std_logic_vector(
+                                shift_left(unsigned(current_sprite_byte), to_integer(x_bit_offset))
+                            );
+                            collision_part := ram_dout_a and sprite_left_shifted;
                     if collision_part /= x"00" then
                         col_flag <= '1';
                     end if;
@@ -228,8 +209,10 @@ begin
 
                 when DRW_WRITE_2 =>
                     shift := 8 - to_integer(sprite_x_start(2 downto 0));
-                    sprite_right_shifted := shift_right(current_sprite_byte, shift, '0');
-                    collision_part := ram_dout_a and sprite_right_shifted;
+                            sprite_right_shifted := std_logic_vector(
+                                shift_right(unsigned(current_sprite_byte), shift)
+                            );
+                            collision_part := ram_dout_a and sprite_right_shifted;
                     if collision_part /= x"00" then
                         col_flag <= '1';
                     end if;

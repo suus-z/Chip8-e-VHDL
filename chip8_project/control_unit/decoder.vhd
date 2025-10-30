@@ -19,7 +19,7 @@ entity decoder is
     );
 end decoder;
 
-architecture rtl of decoder is
+architecture arch_decoder of decoder is
 begin
 
     --extract basic fields
@@ -132,4 +132,4 @@ begin
         end case;
     end process;
 
-end rtl;
+end arch_decoder;

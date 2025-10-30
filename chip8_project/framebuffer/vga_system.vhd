@@ -41,7 +41,9 @@ entity vga_system is
 
         --Sync signals
         h_sync       : out std_logic;
-        v_sync       : out std_logic
+        v_sync       : out std_logic;
+        sync_n       : out std_logic;
+        blank_n      : out std_logic
     );
 end vga_system;
 
@@ -109,6 +111,7 @@ architecture rtl of vga_system is
     signal disp_en      : std_logic;
     signal column, row  : std_logic_vector(9 downto 0);
     signal pix_clk      : std_logic;
+    signal hsync_s, vsync_s : std_logic;
 
 begin
     inst_tick_25MHz: tick_25MHz port map(clk, reset, pix_clk);
@@ -117,8 +120,8 @@ begin
         pix_clk => pix_clk,
         reset   => reset,
         disp_en => disp_en,
-        h_sync  => h_sync,
-        v_sync  => v_sync,
+        h_sync  => hsync_s,
+        v_sync  => vsync_s,
         column  => column,
         row     => row);
 
@@ -149,4 +152,9 @@ begin
         b          => b,
         pix_valid  => pix_valid
     );
+
+    sync_n  <= not (hsync_s xor vsync_s);
+    h_sync  <= hsync_s;
+    v_sync  <= vsync_s;
+    blank_n <= not disp_en;
 end rtl;
