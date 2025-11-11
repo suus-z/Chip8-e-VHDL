@@ -10,12 +10,12 @@ entity chip8_alu is
         op_code_in : in  std_logic_vector(5 downto 0); --The 6-bit opcode from the instruction
         data_a_in  : in  std_logic_vector(7 downto 0); --First operand (e.g., Vx)
         data_b_in  : in  std_logic_vector(7 downto 0); --Second operand (e.g., Vy or kk)
-        i_reg_in   : in  std_logic_vector(15 downto 0); --Actual value of I register
+        i_reg_in   : in  std_logic_vector(11 downto 0); --Actual value of I register
         
         -- Outputs
-        result_out : out std_logic_vector(7 downto 0); --Result of the operation
+        result_out : out std_logic_vector(7 downto 0);  --Result of the operation
         vf_flag    : out std_logic;                     --The VF (carry/borrow) flag
-        i_add_out  : out std_logic_vector(15 downto 0)  --Result for the I_ADD_I_Vx instruction
+        i_add_out  : out std_logic_vector(11 downto 0)  --Result for the I_ADD_I_Vx instruction
     );
 end entity chip8_alu;
 
@@ -88,7 +88,7 @@ begin
                 
             --FX1E: ADD I, Vx (This operation has a 16-bit output)
             when I_ADD_I_Vx =>
-                i_add_out <= std_logic_vector(unsigned(i_reg_in) + resize(unsigned(data_a_in), 16));
+                i_add_out <= std_logic_vector(unsigned(i_reg_in) + resize(unsigned(data_a_in), 12));
 
             --If the opcode is not a known ALU operation, set outputs to a default value
             when others =>

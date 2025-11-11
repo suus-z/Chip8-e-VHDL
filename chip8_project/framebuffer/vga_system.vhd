@@ -10,6 +10,7 @@ entity vga_system is
     port(
         clk     : in std_logic;
         reset   : in std_logic;
+        clk_25  : out std_logic;
         
         --Port B Interface (Display Reading - VGA)
         ram_addr_b   : out std_logic_vector(11 downto 0);
@@ -157,4 +158,5 @@ begin
     h_sync  <= hsync_s;
     v_sync  <= vsync_s;
     blank_n <= not disp_en;
+    clk_25  <= pix_clk;
 end rtl;

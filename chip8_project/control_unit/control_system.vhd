@@ -14,15 +14,21 @@ entity control_system is
         opcode       : in  std_logic_vector(15 downto 0);
 
         --Inputs from Chip-8 Core
-        pc_in        : in  std_logic_vector(11 downto 0);
-        i_reg_in     : in  std_logic_vector(11 downto 0);
-        ram_dout     : in  std_logic_vector(7 downto 0);
-        key_pressed  : in  std_logic;
-        key_value_in : in  std_logic_vector(3 downto 0);
-        dt_in        : in  std_logic_vector(7 downto 0);
-        st_in        : in  std_logic_vector(7 downto 0);
-        bcd_code     : in  std_logic_vector(11 downto 0);
-        rand_val     : in  std_logic_vector(7 downto 0);
+        pc_in         : in  std_logic_vector(11 downto 0);
+        i_reg_in      : in  std_logic_vector(11 downto 0);
+        ram_dout      : in  std_logic_vector(7 downto 0);
+        key_pressed   : in  std_logic;
+        key_value_in  : in  std_logic_vector(3 downto 0);
+        dt_in         : in  std_logic_vector(7 downto 0);
+        st_in         : in  std_logic_vector(7 downto 0);
+        bcd_code      : in  std_logic_vector(11 downto 0);
+        rand_val      : in  std_logic_vector(7 downto 0);
+        alu_result_in : in  std_logic_vector(7 downto 0);  
+        alu_i_add_in  : in  std_logic_vector(11 downto 0); 
+        vf_flag_in    : in  std_logic;
+        cmd_ack       : in  std_logic;
+        cmd_done      : in  std_logic;
+        collision     : in  std_logic;
 
         --Outputs (Control Signals)
         ram_read_en     : out std_logic;
@@ -43,14 +49,14 @@ entity control_system is
         video_clear_en  : out std_logic;
         video_draw_en   : out std_logic;
 
-        bcd_en          : out std_logic;
-        bin_din         : out std_logic;
-        font_addr_en    : out std_logic;
+        bin_din         : out std_logic_vector(7 downto 0);
 
         pc_load_en      : out std_logic;
         pc_inc_en       : out std_logic;
         pc_skip_en      : out std_logic;
         pc_addr_out     : out std_logic_vector(11 downto 0);
+        pc_ret_en       : out std_logic;
+        pc_jump_v0_en   : out std_logic;
 
         reg_read_en     : out std_logic;
         reg_write_en    : out std_logic;
@@ -60,10 +66,12 @@ entity control_system is
         reg_data        : out std_logic_vector(7 downto 0);
 
         i_load_en       : out std_logic;
-        i_data_in       : out std_logic_vector(15 downto 0);
+        i_data_in       : out std_logic_vector(11 downto 0);
         i_inc_en        : out std_logic;
 
-        alu_op          : out std_logic_vector(5 downto 0)
+        alu_op          : out std_logic_vector(5 downto 0);
+
+        latch_msb_en    : out std_logic
     );
 end control_system;
 
@@ -85,69 +93,72 @@ architecture rtl of control_system is
 
     component control_fsm is
         port (
-            clk           : in  std_logic;
-            reset         : in  std_logic;
+        --System inputs
+        clk             : in  std_logic;
+        reset           : in  std_logic;
 
-            --From chip-8
-            pc_in         : in  std_logic_vector(11 downto 0);
-            i_reg_in      : in  std_logic_vector(11 downto 0);
-            ram_dout      : in  std_logic_vector(7 downto 0);
-            key_pressed   : in  std_logic;
-            key_value_in  : in  std_logic_vector(3 downto 0);
-            dt_in         : in  std_logic_vector(7 downto 0);
-            st_in         : in  std_logic_vector(7 downto 0);
-            bcd_code      : in  std_logic_vector(11 downto 0);
-            rand_val      : in  std_logic_vector(7 downto 0);
+        --Inputs from chip-8 top-level
+        pc_in           : in  std_logic_vector(11 downto 0);
+        i_reg_in        : in  std_logic_vector(11 downto 0);
+        instr_code      : in  std_logic_vector(5 downto 0); --from decoder
+        ram_dout        : in  std_logic_vector(7 downto 0);
+        nnn             : in  std_logic_vector(11 downto 0);
+        kk              : in  std_logic_vector(7 downto 0);
+        x               : in  std_logic_vector(3 downto 0);
+        y               : in  std_logic_vector(3 downto 0);
+        n               : in  std_logic_vector(3 downto 0);
+        illegal_instr   : in  std_logic;
+        key_pressed     : in  std_logic;
+        key_value_in    : in  std_logic_vector(3 downto 0);
+        dt_in           : in  std_logic_vector(7 downto 0); --delay timer
+        st_in           : in  std_logic_vector(7 downto 0); --sound timer
+        bcd_code        : in  std_logic_vector(11 downto 0); --BCD code
+        rand_val        : in  std_logic_vector(7 downto 0);
+        alu_result_in   : in  std_logic_vector(7 downto 0);  
+        alu_i_add_in    : in  std_logic_vector(11 downto 0); 
+        vf_flag_in      : in  std_logic;
 
-            --From decoder
-            instr_code    : in  std_logic_vector(5 downto 0);
-            nnn           : in  std_logic_vector(11 downto 0);
-            kk            : in  std_logic_vector(7 downto 0);
-            x             : in  std_logic_vector(3 downto 0);
-            y             : in  std_logic_vector(3 downto 0);
-            n             : in  std_logic_vector(3 downto 0);
-            illegal_instr : in  std_logic;
+        --Outputs
+        ram_read_en     : out std_logic;
+        ram_addr_out    : out std_logic_vector(11 downto 0);
+        ram_write_en    : out std_logic;
+        ram_din         : out std_logic_vector(7 downto 0);
+        stack_push_en   : out std_logic;
+        stack_pop_en    : out std_logic;
 
-            --Control Outputs
-            ram_read_en     : out std_logic;
-            ram_write_en    : out std_logic;
-            ram_addr_out    : out std_logic_vector(11 downto 0);
-            ram_din         : out std_logic_vector(7 downto 0);
+        key_check_en    : out std_logic;
 
-            stack_push_en   : out std_logic;
-            stack_pop_en    : out std_logic;
+        dt_load_en      : out std_logic;
+        dt_din          : out std_logic_vector(7 downto 0); --data for delay timer
+        st_load_en      : out std_logic;
+        st_din          : out std_logic_vector(7 downto 0); --data for sound timer
 
-            key_check_en    : out std_logic;
+        video_clear_en  : out std_logic; --signal to clear the screen
+        video_draw_en   : out std_logic; --signal to draw in the screen
 
-            dt_load_en      : out std_logic;
-            dt_din          : out std_logic_vector(7 downto 0);
-            st_load_en      : out std_logic;
-            st_din          : out std_logic_vector(7 downto 0);
+        bin_din         : out std_logic_vector(7 downto 0);
 
-            video_clear_en  : out std_logic;
-            video_draw_en   : out std_logic;
+        pc_load_en      : out std_logic; --load PC from immediate nnn (pc_load_nnn_en)
+        pc_inc_en       : out std_logic;
+        pc_skip_en      : out std_logic;
+        pc_addr_out     : out std_logic_vector(11 downto 0);
+        pc_ret_en       : out std_logic; --request PC load from stack (RET)
+        pc_jump_v0_en   : out std_logic; --request PC = nnn + V0 (JP V0)
 
-            bcd_en          : out std_logic;
-            bin_din         : out std_logic;
-            font_addr_en    : out std_logic;
+        reg_read_en     : out std_logic;
+        reg_write_en    : out std_logic;
+        reg_read_addr_x : out std_logic_vector(3 downto 0);
+        reg_read_addr_y : out std_logic_vector(3 downto 0);
+        reg_write_addr  : out std_logic_vector(3 downto 0);
+        reg_data        : out std_logic_vector(7 downto 0);
 
-            pc_load_en      : out std_logic;
-            pc_inc_en       : out std_logic;
-            pc_skip_en      : out std_logic;
-            pc_addr_out     : out std_logic_vector(11 downto 0);
+        i_load_en       : out std_logic;
+        i_data_in       : out std_logic_vector(11 downto 0);
+        i_inc_en        : out std_logic;
 
-            reg_read_en     : out std_logic;
-            reg_write_en    : out std_logic;
-            reg_read_addr_x : out std_logic_vector(3 downto 0);
-            reg_read_addr_y : out std_logic_vector(3 downto 0);
-            reg_write_addr  : out std_logic_vector(3 downto 0);
-            reg_data        : out std_logic_vector(7 downto 0);
-
-            i_load_en       : out std_logic;
-            i_data_in       : out std_logic_vector(15 downto 0);
-            i_inc_en        : out std_logic;
-
-            alu_op          : out std_logic_vector(5 downto 0)
+        alu_op          : out std_logic_vector(5 downto 0);
+        
+        latch_msb_en    : out std_logic
         );
     end component;
 
@@ -190,6 +201,10 @@ begin
             bcd_code      => bcd_code,
             rand_val      => rand_val,
 
+            alu_result_in => alu_result_in, 
+            alu_i_add_in  => alu_i_add_in,
+            vf_flag_in    => vf_flag_in,
+
             instr_code    => s_instr_code,
             nnn           => s_nnn,
             kk            => s_kk,
@@ -216,14 +231,14 @@ begin
             video_clear_en  => video_clear_en,
             video_draw_en   => video_draw_en,
 
-            bcd_en          => bcd_en,
             bin_din         => bin_din,
-            font_addr_en    => font_addr_en,
 
             pc_load_en      => pc_load_en,
             pc_inc_en       => pc_inc_en,
             pc_skip_en      => pc_skip_en,
             pc_addr_out     => pc_addr_out,
+            pc_ret_en       => pc_ret_en,
+            pc_jump_v0_en   => pc_jump_v0_en,
 
             reg_read_en     => reg_read_en,
             reg_write_en    => reg_write_en,
@@ -236,6 +251,8 @@ begin
             i_data_in       => i_data_in,
             i_inc_en        => i_inc_en,
 
-            alu_op          => alu_op
+            alu_op          => alu_op,
+
+            latch_msb_en    => latch_msb_en
         );
 end rtl;

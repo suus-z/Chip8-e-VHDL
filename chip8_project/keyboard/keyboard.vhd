@@ -9,7 +9,7 @@ entity keyboard is
         reset     : in   std_logic;
         row       : in   std_logic_vector(3 downto 0);
         column    : out  std_logic_vector(3 downto 0);
-        key_code  : out  unsigned (3 downto 0);
+        key_code  : out  std_logic_vector(3 downto 0);
         key_valid : out  std_logic
     );
 end keyboard;
@@ -116,7 +116,7 @@ begin
     end process;
 
     column      <= column_s;
-    key_code    <= key_code_s;
+    key_code    <= std_logic_vector(key_code_s);
     key_valid   <= key_valid_s;
 
 end arch_keyboard;

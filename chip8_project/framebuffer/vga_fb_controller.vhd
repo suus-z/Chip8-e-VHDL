@@ -1,4 +1,4 @@
--- CHIP-8 VGA/Framebuffer Controller
+--CHIP-8 VGA/Framebuffer Controller
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -7,26 +7,26 @@ use work.instructions_constants.all;
 
 entity vga_fb_controller is
     port (
-        -- Clocks e Reset
+        --Clocks and reset
         reset        : in  std_logic;
-        cmd_clk      : in  std_logic;   -- Clock da FSM (CPU Clock)
-        pix_clk      : in  std_logic;   -- Clock de pixel (25 MHz)
-        disp_en      : in  std_logic;   -- Enable de display (do sync_framebuffer)
-        vga_column   : in  std_logic_vector(9 downto 0); -- Coluna VGA (0-639)
-        vga_row      : in  std_logic_vector(9 downto 0); -- Linha VGA (0-479)
+        cmd_clk      : in  std_logic;   --CPU clock (50 MHz)
+        pix_clk      : in  std_logic;   --Pixel clock (25 MHz)
+        disp_en      : in  std_logic;
+        vga_column   : in  std_logic_vector(9 downto 0); --(0-639)
+        vga_row      : in  std_logic_vector(9 downto 0); --(0-479)
 
-        -- Interface Porta B (Leitura do Display - VGA)
+        --RAM Port B interface (for reading)
         ram_addr_b   : out std_logic_vector(11 downto 0);
         ram_dout_b   : in  std_logic_vector(7 downto 0);
 
-        -- Interface Porta A (Escrita CLS/DRW - Para o Árbitro de Memória)
+        --RAM Port A interface (for CLS/DRW writing)
         ram_req_a    : out std_logic;
         ram_we_a     : out std_logic;
         ram_addr_a   : out std_logic_vector(11 downto 0);
         ram_din_a    : out std_logic_vector(7 downto 0);
         ram_dout_a   : in  std_logic_vector(7 downto 0);
 
-        -- Interface de Comando
+        --Command interface
         op_code_in   : in  std_logic_vector(5 downto 0);
         cmd_valid    : in  std_logic;
         cmd_x        : in  std_logic_vector(5 downto 0);
@@ -34,12 +34,12 @@ entity vga_fb_controller is
         cmd_i_reg    : in  std_logic_vector(11 downto 0);
         cmd_n        : in  std_logic_vector(3 downto 0);
 
-        -- Saídas para CPU
+        --CPU outputs
         cmd_ack      : out std_logic;
         cmd_done     : out std_logic;
         collision    : out std_logic;
 
-        -- Saídas VGA
+        --VGA outputs
         r, g, b      : out std_logic_vector(7 downto 0);
         pix_valid    : out std_logic
     );
@@ -50,7 +50,7 @@ architecture arch_vga_fb_controller of vga_fb_controller is
     type state_type is (IDLE, CLS_START, CLS_LOOP, DRW_START, DRW_READ_1, DRW_WRITE_1, DRW_READ_2, DRW_WRITE_2, DRW_NEXT_LINE, DONE);
     signal state          : state_type := IDLE;
 
-    -- Registradores de Controle
+    --Control registers
     signal x_reg, y_reg    : unsigned(5 downto 0);
     signal sprite_x_start  : unsigned(5 downto 0);
     signal sprite_y_start  : unsigned(4 downto 0);
@@ -61,7 +61,7 @@ architecture arch_vga_fb_controller of vga_fb_controller is
     signal current_sprite_byte : std_logic_vector(7 downto 0);
     signal current_fb_addr     : std_logic_vector(11 downto 0);
 
-    -- VGA
+    --VGA
     signal chip8_x, chip8_x_d  : unsigned(5 downto 0);
     signal chip8_y             : unsigned(4 downto 0);
     signal ram_byte_data       : std_logic_vector(7 downto 0);
@@ -69,9 +69,7 @@ architecture arch_vga_fb_controller of vga_fb_controller is
 
 begin
 
-    ----------------------------------------------------
-    -- Leitura VGA
-    ----------------------------------------------------
+    --VGA reading
     process(pix_clk)
     begin
         if rising_edge(pix_clk) then
@@ -103,9 +101,7 @@ begin
     g <= rgb_int(15 downto 8);
     b <= rgb_int(7 downto 0);
 
-    ----------------------------------------------------
-    -- FSM DE ESCRITA (cmd_clk)
-    ----------------------------------------------------
+    --FSM writing
     process(cmd_clk, reset)
         variable y_wrap        : unsigned(4 downto 0);
         variable x_bit_offset  : unsigned(2 downto 0);
