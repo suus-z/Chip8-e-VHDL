@@ -24,9 +24,10 @@ entity registers is
         v0_data_in     : in std_logic_vector(7 downto 0);
 
         --V registers control
-        v_addr  : in std_logic_vector(3 downto 0);
-        v_din   : in std_logic_vector(7 downto 0);
-        v_dout  : out std_logic_vector(7 downto 0);
+        v_reg_read_en  : in std_logic;
+        v_addr   : in std_logic_vector(3 downto 0);
+        v_din    : in std_logic_vector(7 downto 0);
+        v_dout   : out std_logic_vector(7 downto 0);
         v_addr_x : in std_logic_vector(3 downto 0);
         v_dout_x : out std_logic_vector(7 downto 0);
         v_addr_y : in std_logic_vector(3 downto 0);
@@ -46,6 +47,7 @@ entity registers is
         --ST (sound timer)
         st_din   : in std_logic_vector(7 downto 0);
         st_dout  : out std_logic_vector(7 downto 0);
+        beep     : out std_logic;
 
         --Stack functions
         push     : in std_logic;
@@ -82,6 +84,8 @@ architecture arch_reg of registers is
 begin
 
     inst_tick_60Hz: tick_60Hz port map(clk, reset, tick_60Hz_s);
+
+    beep <= '1' when st_reg > "00000000" else '0';
 
     --PC_NEXT
     process(pc_reg, pc_load_nnn_en, pc_inc_en, pc_skip_en, pc_ret_en, pc_jump_v0_en, nnn_in, v0_data_in, stack_ptr, stack)
@@ -159,7 +163,7 @@ begin
 
             --Stack Push/Pop
             if push = '1' and stack_ptr < 15 then
-                stack(to_integer(stack_ptr)) <= std_logic_vector(resize(unsigned(pc_reg) + 2, 16));
+                stack(to_integer(stack_ptr)) <= std_logic_vector(unsigned(pc_reg) + 2);
                 stack_ptr <= stack_ptr + 1;
             elsif pop = '1' and stack_ptr > 0 then
                 stack_ptr <= stack_ptr - 1;
@@ -169,9 +173,9 @@ begin
     end process;
 
     -- Saídas de Registradores (Combinacionais)
-    v_dout  <= v_reg(to_integer(unsigned(v_addr)));
-    v_dout_x <= v_reg(to_integer(unsigned(v_addr_x)));
-    v_dout_y <= v_reg(to_integer(unsigned(v_addr_y)));
+    v_dout  <= v_reg(to_integer(unsigned(v_addr)))    when v_reg_read_en = '1' else (others => '0');
+    v_dout_x <= v_reg(to_integer(unsigned(v_addr_x))) when v_reg_read_en = '1' else (others => '0');
+    v_dout_y <= v_reg(to_integer(unsigned(v_addr_y))) when v_reg_read_en = '1' else (others => '0');
     
     i_dout  <= i_reg;
     pc_dout <= pc_reg;

@@ -12,6 +12,8 @@ entity control_fsm is
 
         --Inputs from chip-8 top-level
         pc_in           : in  std_logic_vector(11 downto 0);
+        reg_data_x_in   : in  std_logic_vector(7 downto 0);
+        reg_data_y_in   : in  std_logic_vector(7 downto 0);
         i_reg_in        : in  std_logic_vector(11 downto 0);
         instr_code      : in  std_logic_vector(5 downto 0); --from decoder
         ram_dout        : in  std_logic_vector(7 downto 0);
@@ -89,8 +91,6 @@ architecture arch_control_fsm of control_fsm is
     signal current_state, next_state : state_type;
 
     signal reg_counter               : unsigned(3 downto 0);
-    signal reg_data_x                : std_logic_vector(7 downto 0);
-    signal reg_data_y                : std_logic_vector(7 downto 0);
 
     signal i_reg_addr_internal       : std_logic_vector(11 downto 0);
 
@@ -150,8 +150,6 @@ begin
         reg_read_addr_y <= (others => '0');
         reg_write_addr  <= (others => '0');
         reg_data        <= (others => '0');
-        reg_data_x      <= (others => '0');
-        reg_data_y      <= (others => '0');
 
         alu_op          <= (others => '0');
 
@@ -253,7 +251,7 @@ begin
 
                     --SE Vx, kk
                     when I_SE_Vx_kk =>
-                        if reg_data_x = kk then
+                        if reg_data_x_in = kk then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -261,7 +259,7 @@ begin
 
                     --SNE Vx, kk
                     when I_SNE_Vx_kk =>
-                        if reg_data_x /= kk then
+                        if reg_data_x_in /= kk then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -269,7 +267,7 @@ begin
 
                     --SE Vx, Vy
                     when I_SE_Vx_Vy =>
-                        if reg_data_x = reg_data_y then
+                        if reg_data_x_in = reg_data_y_in then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -277,7 +275,7 @@ begin
 
                     --SNE Vx, Vy
                     when I_SNE_Vx_Vy =>
-                        if reg_data_x /= reg_data_y then
+                        if reg_data_x_in /= reg_data_y_in then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -286,7 +284,7 @@ begin
                     --SKP Vx
                     when I_SKP =>
                         key_check_en <= '1';
-                        if key_pressed = '1' and std_logic_vector(resize(unsigned(key_value_in), 8)) = reg_data_x then
+                        if key_pressed = '1' and std_logic_vector(resize(unsigned(key_value_in), 8)) = reg_data_x_in then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -295,7 +293,7 @@ begin
                     --SKNP Vx
                     when I_SKNP =>
                         key_check_en <= '1';
-                        if key_pressed = '0' or std_logic_vector(resize(unsigned(key_value_in), 8)) /= reg_data_x then
+                        if key_pressed = '0' or std_logic_vector(resize(unsigned(key_value_in), 8)) /= reg_data_x_in then
                             pc_skip_en <= '1';
                         end if;
                         pc_inc_en <= '1';
@@ -320,7 +318,7 @@ begin
                     when I_LD_Vx_Vy =>
                         reg_write_en   <= '1';
                         reg_write_addr <= x;
-                        reg_data       <= reg_data_y;
+                        reg_data       <= reg_data_y_in;
                         pc_inc_en      <= '1';
                         next_state     <= S_FETCH_1;
 
@@ -335,14 +333,14 @@ begin
                     --LD DT, Vx
                     when I_LD_DT_Vx =>
                         dt_load_en <= '1';
-                        dt_din     <= reg_data_x;
+                        dt_din     <= reg_data_x_in;
                         pc_inc_en  <= '1';
                         next_state <= S_FETCH_1;
 
                     --LD ST, Vx
                     when I_LD_ST_Vx =>
                         st_load_en <= '1';
-                        st_din     <= reg_data_x;
+                        st_din     <= reg_data_x_in;
                         pc_inc_en  <= '1';
                         next_state <= S_FETCH_1;
 
@@ -367,7 +365,7 @@ begin
                     --LD F, Vx
                     when I_LD_F =>
                         i_load_en <= '1';
-                        i_data_in <= std_logic_vector(resize(unsigned(reg_data_x) * 5, 12));
+                        i_data_in <= std_logic_vector(resize(unsigned(reg_data_x_in) * 5, 12));
                         pc_inc_en <= '1';
                         next_state <= S_FETCH_1;
 
@@ -465,7 +463,7 @@ begin
                     reg_read_addr_x <= std_logic_vector(reg_counter);
                     ram_write_en    <= '1';
                     ram_addr_out    <= i_reg_addr_internal;
-                    ram_din         <= reg_data_x;
+                    ram_din         <= reg_data_x_in;
                     
                     if reg_counter = unsigned(x) then
                         i_inc_en   <= '1';

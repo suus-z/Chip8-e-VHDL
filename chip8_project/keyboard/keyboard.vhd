@@ -10,7 +10,8 @@ entity keyboard is
         row       : in   std_logic_vector(3 downto 0);
         column    : out  std_logic_vector(3 downto 0);
         key_code  : out  std_logic_vector(3 downto 0);
-        key_valid : out  std_logic
+        key_valid : out  std_logic;
+        key_check : in   std_logic
     );
 end keyboard;
 
@@ -69,7 +70,11 @@ begin
         elsif rising_edge(clk50kHz) then
             key_valid_s <= '0';
 
-
+            if key_check = '0' then
+                column_s <= (others => '1');
+                current_state <= IDLE;
+                key_valid_s <= '0';
+            else
                 case current_state is
 
                 when IDLE =>
@@ -110,8 +115,8 @@ begin
                     key_code_s <= to_unsigned(column_scan_index * 4 + key_pressed_row, 4);
                     key_valid_s <= '1';
                     current_state <= IDLE;
-            
-            end case;
+                end case;
+            end if;
         end if;
     end process;
 

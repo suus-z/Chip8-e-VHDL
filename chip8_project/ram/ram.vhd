@@ -1,4 +1,4 @@
---RAM 4KB dual-port
+--RAM 4KB
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -6,73 +6,41 @@ use work.ram_constants.all;
 
 entity ram is
   generic (
-    data_width : integer := 8;
-    addr_width : integer := 12
+    ram_data_width : integer := 8;
+    ram_addr_width : integer := 12
   );
 
   port (
-    --A port
-    clk_a  : in std_logic;
-    we     : in std_logic;
-    addr_a : in std_logic_vector(addr_width - 1 downto 0);
-    din    : in std_logic_vector(data_width - 1 downto 0);
-    dout_a : out std_logic_vector(data_width - 1 downto 0);
-
-    --B port
-    clk_b  : in std_logic;
-    addr_b : in std_logic_vector(addr_width - 1 downto 0);
-    dout_b : out std_logic_vector(data_width - 1 downto 0)
+    clk      : in std_logic;
+    ram_we   : in std_logic;
+    ram_re   : in std_logic;
+    ram_addr : in std_logic_vector(ram_addr_width - 1 downto 0);
+    ram_din  : in std_logic_vector(ram_data_width - 1 downto 0);
+    ram_dout : out std_logic_vector(ram_data_width - 1 downto 0)
   );
 end ram;
 
 architecture ram_arch of ram is
 
-  type ram_type is array(0 to (2 ** addr_width - 1)) of std_logic_vector(data_width - 1 downto 0);
-  signal ram_block : ram_type := (
-  16#000# => x"F0", 16#001# => x"90", 16#002# => x"90", 16#003# => x"90", 16#004# => x"F0", --0
-  16#005# => x"20", 16#006# => x"60", 16#007# => x"20", 16#008# => x"20", 16#009# => x"70", --1
-  16#00A# => x"F0", 16#00B# => x"10", 16#00C# => x"F0", 16#00D# => x"80", 16#00E# => x"F0", --2
-  16#00F# => x"F0", 16#010# => x"10", 16#011# => x"F0", 16#012# => x"10", 16#013# => x"F0", --3
-  16#014# => x"90", 16#015# => x"90", 16#016# => x"F0", 16#017# => x"10", 16#018# => x"10", --4
-  16#019# => x"F0", 16#01A# => x"80", 16#01B# => x"F0", 16#01C# => x"10", 16#01D# => x"F0", --5
-  16#01E# => x"F0", 16#01F# => x"80", 16#020# => x"F0", 16#021# => x"90", 16#022# => x"F0", --6
-  16#023# => x"F0", 16#024# => x"10", 16#025# => x"20", 16#026# => x"40", 16#027# => x"40", --7
-  16#028# => x"F0", 16#029# => x"90", 16#02A# => x"F0", 16#02B# => x"90", 16#02C# => x"F0", --8
-  16#02D# => x"F0", 16#02E# => x"90", 16#02F# => x"F0", 16#030# => x"10", 16#031# => x"F0", --9
-  16#032# => x"F0", 16#033# => x"90", 16#034# => x"F0", 16#035# => x"90", 16#036# => x"90", --A
-  16#037# => x"E0", 16#038# => x"90", 16#039# => x"E0", 16#03A# => x"90", 16#03B# => x"E0", --B
-  16#03C# => x"F0", 16#03D# => x"80", 16#03E# => x"80", 16#03F# => x"80", 16#040# => x"F0", --C
-  16#041# => x"E0", 16#042# => x"90", 16#043# => x"90", 16#044# => x"90", 16#045# => x"E0", --D
-  16#046# => x"F0", 16#047# => x"80", 16#048# => x"F0", 16#049# => x"80", 16#04A# => x"F0", --E
-  16#04B# => x"F0", 16#04C# => x"80", 16#04D# => x"F0", 16#04E# => x"80", 16#04F# => x"80", --F
-  others => (others => '0'));
-
-  attribute ram_style              : string;
-  attribute ram_style of ram_block : signal is "block";
-
-  attribute ramstyle : string;
-  attribute ramstyle of ram_block : signal is "no_rw_check, M9K";
+  type ram_type is array(0 to ((2 ** ram_addr_width) - 1)) of std_logic_vector(ram_data_width - 1 downto 0);
+  signal ram_block : ram_type;
 
   attribute ram_init_file              : string;
-  attribute ram_init_file of ram_block : signal is "invaders.mif";
+  attribute ram_init_file of ram_arch : architecture is "invaders.mif";
 
 begin
 
-  process (clk_a)
+  process (clk)
   begin
-    if rising_edge(clk_a) then
-      if we = '1' and unsigned(addr_a) >= font_size then
-        ram_block(to_integer(unsigned(addr_a))) <= din;
+    if rising_edge(clk) then
+      if ram_we = '1' and unsigned(ram_addr) >= font_size then
+        ram_block(to_integer(unsigned(ram_addr))) <= ram_din;
       end if;
 
-      dout_a <= ram_block(to_integer(unsigned(addr_a)));
-    end if;
-  end process;
+      if ram_re = '1' and unsigned(ram_addr) >= font_size then
+      ram_dout <= ram_block(to_integer(unsigned(ram_addr)));
+      end if;
 
-  process (clk_b)
-  begin
-    if rising_edge(clk_b) then
-      dout_b <= ram_block(to_integer(unsigned(addr_b)));
     end if;
   end process;
 

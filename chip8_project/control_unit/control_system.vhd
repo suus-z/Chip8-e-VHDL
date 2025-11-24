@@ -15,6 +15,8 @@ entity control_system is
 
         --Inputs from Chip-8 Core
         pc_in         : in  std_logic_vector(11 downto 0);
+        reg_data_x_in : in  std_logic_vector(7 downto 0);
+        reg_data_y_in : in  std_logic_vector(7 downto 0);
         i_reg_in      : in  std_logic_vector(11 downto 0);
         ram_dout      : in  std_logic_vector(7 downto 0);
         key_pressed   : in  std_logic;
@@ -71,7 +73,8 @@ entity control_system is
 
         alu_op          : out std_logic_vector(5 downto 0);
 
-        latch_msb_en    : out std_logic
+        latch_msb_en    : out std_logic;
+        instr_code_out  : out std_logic_vector(5 downto 0)
     );
 end control_system;
 
@@ -99,6 +102,8 @@ architecture rtl of control_system is
 
         --Inputs from chip-8 top-level
         pc_in           : in  std_logic_vector(11 downto 0);
+        reg_data_x_in   : in  std_logic_vector(7 downto 0);
+        reg_data_y_in   : in  std_logic_vector(7 downto 0);
         i_reg_in        : in  std_logic_vector(11 downto 0);
         instr_code      : in  std_logic_vector(5 downto 0); --from decoder
         ram_dout        : in  std_logic_vector(7 downto 0);
@@ -172,6 +177,8 @@ architecture rtl of control_system is
     signal s_illegal    : std_logic;
 
 begin
+    instr_code_out <= s_instr_code;
+
     --Instruction Decoder
     u_decoder : decoder
         port map (
@@ -192,6 +199,8 @@ begin
             reset         => reset,
 
             pc_in         => pc_in,
+            reg_data_x_in => reg_data_x_in,
+            reg_data_y_in => reg_data_y_in,
             i_reg_in      => i_reg_in,
             ram_dout      => ram_dout,
             key_pressed   => key_pressed,

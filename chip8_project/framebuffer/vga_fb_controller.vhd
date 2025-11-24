@@ -15,14 +15,13 @@ entity vga_fb_controller is
         vga_column   : in  std_logic_vector(9 downto 0); --(0-639)
         vga_row      : in  std_logic_vector(9 downto 0); --(0-479)
 
-        --RAM Port B interface (for reading)
-        ram_addr_b   : out std_logic_vector(11 downto 0);
+        --VRAM Port B interface (for reading)
+        ram_addr_b   : out std_logic_vector(7 downto 0);
         ram_dout_b   : in  std_logic_vector(7 downto 0);
 
-        --RAM Port A interface (for CLS/DRW writing)
-        ram_req_a    : out std_logic;
+        --VRAM Port A interface (for CLS/DRW writing)
         ram_we_a     : out std_logic;
-        ram_addr_a   : out std_logic_vector(11 downto 0);
+        ram_addr_a   : out std_logic_vector(7 downto 0);
         ram_din_a    : out std_logic_vector(7 downto 0);
         ram_dout_a   : in  std_logic_vector(7 downto 0);
 
@@ -115,12 +114,10 @@ begin
             cmd_ack <= '0';
             cmd_done <= '0';
             collision <= '0';
-            ram_req_a <= '0';
             ram_we_a <= '0';
         elsif rising_edge(cmd_clk) then
             cmd_ack <= '0';
             cmd_done <= '0';
-            ram_req_a <= '0';
             ram_we_a <= '0';
             collision <= col_flag;
 
@@ -150,7 +147,6 @@ begin
                     current_fb_addr <= std_logic_vector(to_unsigned(display_init_addr, 12) + (y_reg & x_reg(2 downto 0)));
                     ram_addr_a <= current_fb_addr;
                     ram_din_a <= x"00";
-                    ram_req_a <= '1';
                     ram_we_a <= '1';
 
                     if x_reg = 7 then
@@ -166,7 +162,6 @@ begin
 
                 when DRW_START =>
                     ram_addr_a <= std_logic_vector(sprite_addr + current_line);
-                    ram_req_a <= '1';
                     state <= DRW_READ_1;
 
                 when DRW_READ_1 =>
@@ -176,7 +171,6 @@ begin
                     fb_col_addr := sprite_x_start(5 downto 3);
                     current_fb_addr <= std_logic_vector(to_unsigned(display_init_addr, 12) + resize((y_wrap & fb_col_addr), 12));
                     ram_addr_a <= current_fb_addr;
-                    ram_req_a <= '1';
                     state <= DRW_WRITE_1;
 
                 when DRW_WRITE_1 =>
@@ -190,7 +184,6 @@ begin
                     next_byte := ram_dout_a xor sprite_left_shifted;
                     ram_din_a <= next_byte;
                     ram_addr_a <= current_fb_addr;
-                    ram_req_a <= '1';
                     ram_we_a <= '1';
                     if to_integer(x_bit_offset) > 0 then
                         state <= DRW_READ_2;
@@ -200,7 +193,6 @@ begin
 
                 when DRW_READ_2 =>
                     ram_addr_a <= std_logic_vector(unsigned(current_fb_addr) + 1);
-                    ram_req_a <= '1';
                     state <= DRW_WRITE_2;
 
                 when DRW_WRITE_2 =>
@@ -215,7 +207,6 @@ begin
                     next_byte := ram_dout_a xor sprite_right_shifted;
                     ram_din_a <= next_byte;
                     ram_addr_a <= std_logic_vector(unsigned(current_fb_addr) + 1);
-                    ram_req_a <= '1';
                     ram_we_a <= '1';
                     state <= DRW_NEXT_LINE;
 

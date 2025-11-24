@@ -1,4 +1,4 @@
---RTL of framebuffer VGA
+--VGA SYSTEM
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -13,13 +13,12 @@ entity vga_system is
         clk_25  : out std_logic;
         
         --Port B Interface (Display Reading - VGA)
-        ram_addr_b   : out std_logic_vector(11 downto 0);
+        ram_addr_b   : out std_logic_vector(7 downto 0);
         ram_dout_b   : in  std_logic_vector(7 downto 0);
 
-        --Port A Interface (CLS/DRW Write - To Memory Arbiter)
-        ram_req_a    : out std_logic;
+        --Port A Interface (CLS/DRW Write)
         ram_we_a     : out std_logic;
-        ram_addr_a   : out std_logic_vector(11 downto 0);
+        ram_addr_a   : out std_logic_vector(7 downto 0);
         ram_din_a    : out std_logic_vector(7 downto 0);
         ram_dout_a   : in  std_logic_vector(7 downto 0);
 
@@ -48,7 +47,7 @@ entity vga_system is
     );
 end vga_system;
 
-architecture rtl of vga_system is
+architecture arch_vga_system of vga_system is
     component tick_25MHz is
         generic (
             CLK_FREQ_IN  : integer := 50e6;
@@ -84,12 +83,11 @@ architecture rtl of vga_system is
             vga_column   : in  std_logic_vector(9 downto 0);
             vga_row      : in  std_logic_vector(9 downto 0);
 
-            ram_addr_b   : out std_logic_vector(11 downto 0);
+            ram_addr_b   : out std_logic_vector(7 downto 0);
             ram_dout_b   : in  std_logic_vector(7 downto 0);
 
-            ram_req_a    : out std_logic;
             ram_we_a     : out std_logic;
-            ram_addr_a   : out std_logic_vector(11 downto 0);
+            ram_addr_a   : out std_logic_vector(7 downto 0);
             ram_din_a    : out std_logic_vector(7 downto 0);
             ram_dout_a   : in  std_logic_vector(7 downto 0);
 
@@ -135,7 +133,6 @@ begin
         vga_row    => row,
         ram_addr_b => ram_addr_b,
         ram_dout_b => ram_dout_b,
-        ram_req_a  => ram_req_a,
         ram_addr_a => ram_addr_a,
         ram_din_a  => ram_din_a,
         ram_dout_a => ram_dout_a,
@@ -154,9 +151,9 @@ begin
         pix_valid  => pix_valid
     );
 
-    sync_n  <= not (hsync_s xor vsync_s);
+    sync_n  <= '0';
     h_sync  <= hsync_s;
     v_sync  <= vsync_s;
-    blank_n <= not disp_en;
+    blank_n <= '1';
     clk_25  <= pix_clk;
-end rtl;
+end arch_vga_system;
