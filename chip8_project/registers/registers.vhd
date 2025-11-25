@@ -51,8 +51,7 @@ entity registers is
 
         --Stack functions
         push     : in std_logic;
-        pop      : in std_logic;
-        stack_dout : out std_logic_vector(11 downto 0)
+        pop      : in std_logic
     );
 end entity registers;
 
@@ -118,8 +117,6 @@ begin
         
         end if;
     end process;
-
-    stack_dout <= stack(to_integer(stack_ptr - 1)) when stack_ptr > 0 else (others => '0');
 
     process(reset, clk)
     begin

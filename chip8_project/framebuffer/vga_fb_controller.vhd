@@ -15,6 +15,9 @@ entity vga_fb_controller is
         vga_column   : in  std_logic_vector(9 downto 0); --(0-639)
         vga_row      : in  std_logic_vector(9 downto 0); --(0-479)
 
+        sys_ram_addr : out std_logic_vector(11 downto 0);
+        sys_ram_dout : in  std_logic_vector(7 downto 0);
+
         --VRAM Port B interface (for reading)
         ram_addr_b   : out std_logic_vector(7 downto 0);
         ram_dout_b   : in  std_logic_vector(7 downto 0);
@@ -58,10 +61,10 @@ architecture arch_vga_fb_controller of vga_fb_controller is
     signal current_line    : unsigned(3 downto 0);
     signal col_flag        : std_logic := '0';
     signal current_sprite_byte : std_logic_vector(7 downto 0);
-    signal current_fb_addr     : std_logic_vector(11 downto 0);
+    signal current_fb_addr     : std_logic_vector(7 downto 0);
 
     --VGA
-    signal chip8_x, chip8_x_d  : unsigned(5 downto 0);
+    signal chip8_x             : unsigned(5 downto 0);
     signal chip8_y             : unsigned(4 downto 0);
     signal ram_byte_data       : std_logic_vector(7 downto 0);
     signal rgb_int             : std_logic_vector(23 downto 0);
@@ -83,7 +86,7 @@ begin
         end if;
     end process;
 
-    ram_addr_b <= std_logic_vector(to_unsigned(display_init_addr, 12) + (chip8_y & chip8_x(5 downto 3)));
+    ram_addr_b <= "00" & std_logic_vector(chip8_y(2 downto 0) & chip8_x(5 downto 3));
 
     process(ram_byte_data, chip8_x)
         variable pixel_idx : integer;
@@ -144,7 +147,7 @@ begin
                     state <= CLS_LOOP;
 
                 when CLS_LOOP =>
-                    current_fb_addr <= std_logic_vector(to_unsigned(display_init_addr, 12) + (y_reg & x_reg(2 downto 0)));
+                    current_fb_addr <= "00" & std_logic_vector(y_reg(2 downto 0) & x_reg(2 downto 0));
                     ram_addr_a <= current_fb_addr;
                     ram_din_a <= x"00";
                     ram_we_a <= '1';
@@ -161,7 +164,7 @@ begin
                     end if;
 
                 when DRW_START =>
-                    ram_addr_a <= std_logic_vector(sprite_addr + current_line);
+                    sys_ram_addr <= std_logic_vector(sprite_addr + current_line);
                     state <= DRW_READ_1;
 
                 when DRW_READ_1 =>
@@ -169,7 +172,7 @@ begin
                     y_wrap := to_unsigned((to_integer(sprite_y_start) + to_integer(current_line)) mod 32, 5);
                     x_bit_offset := sprite_x_start(2 downto 0);
                     fb_col_addr := sprite_x_start(5 downto 3);
-                    current_fb_addr <= std_logic_vector(to_unsigned(display_init_addr, 12) + resize((y_wrap & fb_col_addr), 12));
+                    current_fb_addr <= "00" & std_logic_vector(y_wrap(2 downto 0) & fb_col_addr);
                     ram_addr_a <= current_fb_addr;
                     state <= DRW_WRITE_1;
 

@@ -37,9 +37,7 @@ begin
         ram_block(to_integer(unsigned(ram_addr))) <= ram_din;
       end if;
 
-      if ram_re = '1' and unsigned(ram_addr) >= font_size then
       ram_dout <= ram_block(to_integer(unsigned(ram_addr)));
-      end if;
 
     end if;
   end process;

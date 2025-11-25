@@ -10,6 +10,7 @@ entity bcd_convert is
     );
     port (
         bin_din     : in  std_logic_vector(BIN_WIDTH-1 downto 0);
+        bcd_en      : in  std_logic;
         bcd_code    : out std_logic_vector(NUM_DIGITS*4-1 downto 0)
     );
 end entity;
@@ -17,24 +18,29 @@ end entity;
 architecture arch_bcd_convert of bcd_convert is
 begin
 
-    process(bin_din)
+    process(bin_din, bcd_en) 
         variable shift_reg : std_logic_vector(BIN_WIDTH + NUM_DIGITS*4 - 1 downto 0);
         variable nibble    : unsigned(3 downto 0);
     begin
-        shift_reg := (others => '0');
-        shift_reg(BIN_WIDTH-1 downto 0) := bin_din;
+        
+        if bcd_en = '1' then
+            shift_reg := (others => '0');
+            shift_reg(BIN_WIDTH-1 downto 0) := bin_din;
 
-        for i in 0 to BIN_WIDTH-1 loop
-            for d in 0 to NUM_DIGITS-1 loop
-                nibble := unsigned(shift_reg(BIN_WIDTH + d*4 + 3 downto BIN_WIDTH + d*4));
-                if nibble >= 5 then
-                    shift_reg(BIN_WIDTH + d*4 + 3 downto BIN_WIDTH + d*4) := std_logic_vector(nibble + 3);
-                end if;
+            for i in 0 to BIN_WIDTH-1 loop
+                for d in 0 to NUM_DIGITS-1 loop
+                    nibble := unsigned(shift_reg(BIN_WIDTH + d*4 + 3 downto BIN_WIDTH + d*4));
+                    if nibble >= 5 then
+                        shift_reg(BIN_WIDTH + d*4 + 3 downto BIN_WIDTH + d*4) := std_logic_vector(nibble + 3);
+                    end if;
+                end loop;
+                shift_reg := shift_reg(shift_reg'left-1 downto 0) & '0';
             end loop;
-            shift_reg := shift_reg(shift_reg'left-1 downto 0) & '0';
-        end loop;
 
-        bcd_code <= shift_reg(shift_reg'left downto BIN_WIDTH);
+            bcd_code <= shift_reg(shift_reg'left downto BIN_WIDTH);
+        else
+            bcd_code <= (others => '0');
+        end if;
     end process;
 
 end arch_bcd_convert;

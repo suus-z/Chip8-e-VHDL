@@ -11,6 +11,9 @@ entity vga_system is
         clk     : in std_logic;
         reset   : in std_logic;
         clk_25  : out std_logic;
+
+        sys_ram_addr : out std_logic_vector(11 downto 0);
+        sys_ram_dout : in  std_logic_vector(7 downto 0);
         
         --Port B Interface (Display Reading - VGA)
         ram_addr_b   : out std_logic_vector(7 downto 0);
@@ -83,6 +86,9 @@ architecture arch_vga_system of vga_system is
             vga_column   : in  std_logic_vector(9 downto 0);
             vga_row      : in  std_logic_vector(9 downto 0);
 
+            sys_ram_addr : out std_logic_vector(11 downto 0);
+            sys_ram_dout : in  std_logic_vector(7 downto 0);
+
             ram_addr_b   : out std_logic_vector(7 downto 0);
             ram_dout_b   : in  std_logic_vector(7 downto 0);
 
@@ -131,9 +137,12 @@ begin
         disp_en    => disp_en,
         vga_column => column,
         vga_row    => row,
+        sys_ram_addr => sys_ram_addr,
+        sys_ram_dout => sys_ram_dout,
         ram_addr_b => ram_addr_b,
         ram_dout_b => ram_dout_b,
         ram_addr_a => ram_addr_a,
+        ram_we_a   => ram_we_a,
         ram_din_a  => ram_din_a,
         ram_dout_a => ram_dout_a,
         op_code_in => op_code_in,

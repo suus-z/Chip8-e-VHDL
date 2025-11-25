@@ -52,6 +52,7 @@ entity control_fsm is
         video_draw_en   : out std_logic; --signal to draw in the screen
 
         bin_din         : out std_logic_vector(7 downto 0);
+        bcd_en          : out std_logic;
 
         pc_load_en      : out std_logic; --load PC from immediate nnn (pc_load_nnn_en)
         pc_inc_en       : out std_logic;
@@ -94,8 +95,6 @@ architecture arch_control_fsm of control_fsm is
 
     signal i_reg_addr_internal       : std_logic_vector(11 downto 0);
 
-    signal bcd_en                    : std_logic;
-
 begin
 
     process(clk, reset)
@@ -122,7 +121,7 @@ begin
     end process;
 
     --Control logic
-    process(current_state, instr_code, pc_in, nnn, kk, x, y, n, illegal_instr)
+    process(current_state, instr_code, pc_in, nnn, kk, x, y, n, illegal_instr, rand_val, key_pressed, key_value_in, reg_data_x_in, reg_data_y_in, dt_in, alu_i_add_in, alu_result_in, vf_flag_in, bcd_code, i_reg_addr_internal, reg_counter, ram_dout, i_reg_in)
     begin
         --Defaults
         ram_read_en     <= '0';
@@ -140,7 +139,6 @@ begin
         pc_skip_en      <= '0';
         pc_addr_out     <= (others => '0');
 
-        -- defaults for new outputs
         pc_ret_en       <= '0';
         pc_jump_v0_en   <= '0';
 
@@ -165,6 +163,11 @@ begin
 
         bcd_en          <= '0';
 
+        video_clear_en  <= '0'; 
+        video_draw_en   <= '0'; 
+        latch_msb_en    <= '0';
+        bin_din         <= (others => '0');
+
         next_state <= current_state;
 
         case current_state is
@@ -176,7 +179,7 @@ begin
                 pc_inc_en       <= '0';
                 pc_load_en      <= '0';
                 pc_skip_en      <= '0';
-                bcd_en          <= '0';
+                bcd_en        <= '0';
 
                 next_state   <= S_FETCH_2;
 

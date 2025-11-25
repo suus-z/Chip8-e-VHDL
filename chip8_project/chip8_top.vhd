@@ -25,77 +25,78 @@ end chip8_top;
 
 architecture rtl of chip8_top is
     component control_system is
-    port (
-        --System Signals
-        clk          : in  std_logic;
-        reset        : in  std_logic;
+        port (
+            --System Signals
+            clk          : in  std_logic;
+            reset        : in  std_logic;
 
-        --Instruction Input
-        opcode       : in  std_logic_vector(15 downto 0);
+            --Instruction Input
+            opcode       : in  std_logic_vector(15 downto 0);
 
-        --Inputs from Chip-8 Core
-        pc_in         : in  std_logic_vector(11 downto 0);
-        reg_data_x_in : in  std_logic_vector(7 downto 0);
-        reg_data_y_in : in  std_logic_vector(7 downto 0);
-        i_reg_in      : in  std_logic_vector(11 downto 0);
-        ram_dout      : in  std_logic_vector(7 downto 0);
-        key_pressed   : in  std_logic;
-        key_value_in  : in  std_logic_vector(3 downto 0);
-        dt_in         : in  std_logic_vector(7 downto 0);
-        st_in         : in  std_logic_vector(7 downto 0);
-        bcd_code      : in  std_logic_vector(11 downto 0);
-        rand_val      : in  std_logic_vector(7 downto 0);
-        alu_result_in : in std_logic_vector(7 downto 0);  
-        alu_i_add_in  : in std_logic_vector(11 downto 0); 
-        vf_flag_in    : in std_logic;
-        cmd_ack       : in  std_logic;
-        cmd_done      : in  std_logic;
-        collision     : in  std_logic;
+            --Inputs from Chip-8 Core
+            pc_in         : in  std_logic_vector(11 downto 0);
+            reg_data_x_in : in  std_logic_vector(7 downto 0);
+            reg_data_y_in : in  std_logic_vector(7 downto 0);
+            i_reg_in      : in  std_logic_vector(11 downto 0);
+            ram_dout      : in  std_logic_vector(7 downto 0);
+            key_pressed   : in  std_logic;
+            key_value_in  : in  std_logic_vector(3 downto 0);
+            dt_in         : in  std_logic_vector(7 downto 0);
+            st_in         : in  std_logic_vector(7 downto 0);
+            bcd_code      : in  std_logic_vector(11 downto 0);
+            rand_val      : in  std_logic_vector(7 downto 0);
+            alu_result_in : in  std_logic_vector(7 downto 0);  
+            alu_i_add_in  : in  std_logic_vector(11 downto 0); 
+            vf_flag_in    : in  std_logic;
+            cmd_ack       : in  std_logic;
+            cmd_done      : in  std_logic;
+            collision     : in  std_logic;
 
-        --Outputs (Control Signals)
-        ram_read_en     : out std_logic;
-        ram_write_en    : out std_logic;
-        ram_addr_out    : out std_logic_vector(11 downto 0);
-        ram_din         : out std_logic_vector(7 downto 0);
+            --Outputs (Control Signals)
+            ram_read_en     : out std_logic;
+            ram_write_en    : out std_logic;
+            ram_addr_out    : out std_logic_vector(11 downto 0);
+            ram_din         : out std_logic_vector(7 downto 0);
 
-        stack_push_en   : out std_logic;
-        stack_pop_en    : out std_logic;
+            stack_push_en   : out std_logic;
+            stack_pop_en    : out std_logic;
 
-        key_check_en    : out std_logic;
+            key_check_en    : out std_logic;
 
-        dt_load_en      : out std_logic;
-        dt_din          : out std_logic_vector(7 downto 0);
-        st_load_en      : out std_logic;
-        st_din          : out std_logic_vector(7 downto 0);
+            dt_load_en      : out std_logic;
+            dt_din          : out std_logic_vector(7 downto 0);
+            st_load_en      : out std_logic;
+            st_din          : out std_logic_vector(7 downto 0);
 
-        video_clear_en  : out std_logic;
-        video_draw_en   : out std_logic;
+            video_clear_en  : out std_logic;
+            video_draw_en   : out std_logic;
 
-        bin_din         : out std_logic_vector(7 downto 0);
+            bin_din         : out std_logic_vector(7 downto 0);
+            bcd_en          : out std_logic;
 
-        pc_load_en      : out std_logic;
-        pc_inc_en       : out std_logic;
-        pc_skip_en      : out std_logic;
-        pc_addr_out     : out std_logic_vector(11 downto 0);
-        pc_ret_en       : out std_logic;
-        pc_jump_v0_en   : out std_logic;
+            pc_load_en      : out std_logic;
+            pc_inc_en       : out std_logic;
+            pc_skip_en      : out std_logic;
+            pc_addr_out     : out std_logic_vector(11 downto 0);
+            pc_ret_en       : out std_logic;
+            pc_jump_v0_en   : out std_logic;
 
-        reg_read_en     : out std_logic;
-        reg_write_en    : out std_logic;
-        reg_read_addr_x : out std_logic_vector(3 downto 0);
-        reg_read_addr_y : out std_logic_vector(3 downto 0);
-        reg_write_addr  : out std_logic_vector(3 downto 0);
-        reg_data        : out std_logic_vector(7 downto 0);
+            reg_read_en     : out std_logic;
+            reg_write_en    : out std_logic;
+            reg_read_addr_x : out std_logic_vector(3 downto 0);
+            reg_read_addr_y : out std_logic_vector(3 downto 0);
+            reg_write_addr  : out std_logic_vector(3 downto 0);
+            reg_data        : out std_logic_vector(7 downto 0);
 
-        i_load_en       : out std_logic;
-        i_data_in       : out std_logic_vector(11 downto 0);
-        i_inc_en        : out std_logic;
+            i_load_en       : out std_logic;
+            i_data_in       : out std_logic_vector(11 downto 0);
+            i_inc_en        : out std_logic;
 
-        alu_op          : out std_logic_vector(5 downto 0);
+            alu_op          : out std_logic_vector(5 downto 0);
 
-        latch_msb_en    : out std_logic;
-        instr_code_out  : out std_logic_vector(5 downto 0)
-    );
+            latch_msb_en    : out std_logic;
+            instr_code_out  : out std_logic_vector(5 downto 0)
+        );
     end component control_system;
 
     component vga_system is
@@ -103,14 +104,17 @@ architecture rtl of chip8_top is
         clk     : in std_logic;
         reset   : in std_logic;
         clk_25  : out std_logic;
+
+        sys_ram_addr : out std_logic_vector(11 downto 0);
+        sys_ram_dout : in  std_logic_vector(7 downto 0);
         
         --Port B Interface (Display Reading - VGA)
-        ram_addr_b   : out std_logic_vector(11 downto 0);
+        ram_addr_b   : out std_logic_vector(7 downto 0);
         ram_dout_b   : in  std_logic_vector(7 downto 0);
 
         --Port A Interface (CLS/DRW Write)
         ram_we_a     : out std_logic;
-        ram_addr_a   : out std_logic_vector(11 downto 0);
+        ram_addr_a   : out std_logic_vector(7 downto 0);
         ram_din_a    : out std_logic_vector(7 downto 0);
         ram_dout_a   : in  std_logic_vector(7 downto 0);
 
@@ -141,37 +145,37 @@ architecture rtl of chip8_top is
 
     component ram is
     generic (
-        data_width : integer := 8;
-        addr_width : integer := 12
+        ram_data_width : integer := 8;
+        ram_addr_width : integer := 12
     );
 
     port (
         clk      : in std_logic;
         ram_we   : in std_logic;
         ram_re   : in std_logic;
-        ram_addr : in std_logic_vector(addr_width - 1 downto 0);
-        ram_din  : in std_logic_vector(data_width - 1 downto 0);
-        ram_dout : out std_logic_vector(data_width - 1 downto 0)
+        ram_addr : in std_logic_vector(ram_addr_width - 1 downto 0);
+        ram_din  : in std_logic_vector(ram_data_width - 1 downto 0);
+        ram_dout : out std_logic_vector(ram_data_width - 1 downto 0)
     );
     end component ram;
 
     component vram is
     generic(
-        data_width : integer := 8;
-        addr_width : integer := 8
+        vram_data_width : integer := 8;
+        vram_addr_width : integer := 8
     );
     port(
-        --PORT A
+         --PORT A
         clk_a      : in std_logic;
         we_a       : in std_logic;
-        addr_a     : in std_logic_vector(addr_width - 1 downto 0);
-        din_a      : in std_logic_vector(data_width - 1 downto 0);
-        dout_a     : out std_logic_vector(data_width - 1 downto 0);
-        
+        addr_a     : in std_logic_vector(vram_addr_width - 1 downto 0);
+        din_a      : in std_logic_vector(vram_data_width - 1 downto 0);
+        dout_a     : out std_logic_vector(vram_data_width - 1 downto 0);
+            
         --PORT B
         clk_b      : in std_logic;
-        addr_b     : in std_logic_vector(addr_width - 1 downto 0);
-        dout_b     : out std_logic_vector(data_width - 1 downto 0)
+        addr_b     : in std_logic_vector(vram_addr_width - 1 downto 0);
+        dout_b     : out std_logic_vector(vram_data_width - 1 downto 0)
     );
     end component vram;
 
@@ -224,8 +228,7 @@ architecture rtl of chip8_top is
 
         --Stack functions
         push     : in std_logic;
-        pop      : in std_logic;
-        stack_dout : out std_logic_vector(11 downto 0)
+        pop      : in std_logic
     );
     end component registers;
 
@@ -236,6 +239,7 @@ architecture rtl of chip8_top is
     );
     port (
         bin_din     : in  std_logic_vector(BIN_WIDTH-1 downto 0);
+        bcd_en      : in  std_logic;
         bcd_code    : out std_logic_vector(NUM_DIGITS*4-1 downto 0)
     );
     end component bcd_convert;
@@ -283,6 +287,13 @@ architecture rtl of chip8_top is
     signal opcode_msb_s   : std_logic_vector(7 downto 0);
     signal instr_code_s   : std_logic_vector(5 downto 0);
 
+    signal ram_addr_mux_s : std_logic_vector(11 downto 0);
+    signal ram_re_mux_s   : std_logic;
+    signal ram_we_mux_s   : std_logic;
+    signal sys_ram_addr_s : std_logic_vector(11 downto 0);
+
+    signal bcd_en_s       : std_logic;
+
     --RAM
     signal ram_addr_s     : std_logic_vector(11 downto 0);
     signal ram_din_s      : std_logic_vector(7 downto 0);
@@ -314,7 +325,6 @@ architecture rtl of chip8_top is
     signal dt_din_s           : std_logic_vector(7 downto 0);
     signal st_load_en_s       : std_logic;
     signal st_din_s           : std_logic_vector(7 downto 0);
-    signal stack_dout_s       : std_logic_vector(11 downto 0);
     --V reg
     signal vreg_read_en_s     : std_logic;
     signal vreg_write_en_s    : std_logic;
@@ -360,6 +370,30 @@ architecture rtl of chip8_top is
 begin
     we_i_s       <= i_load_en_s or i_inc_en_s;
 
+    -- RAM control mux (robust, no ROM inference)
+    process(clk, reset)
+    begin
+        if reset = '0' then
+            ram_addr_mux_s <= (others => '0');
+            ram_re_mux_s   <= '0';
+            ram_we_mux_s   <= '0';
+
+        elsif rising_edge(clk) then
+
+            -- If VGA is performing a draw instruction, override
+            if video_draw_en_s = '1' then
+                ram_addr_mux_s <= sys_ram_addr_s;
+                ram_re_mux_s   <= '1';   -- ALWAYS read so VGA never infers ROM
+                ram_we_mux_s   <= '0';   -- VGA never writes to system RAM
+            else
+                ram_addr_mux_s <= ram_addr_s;
+                ram_re_mux_s   <= ram_read_en_s;
+                ram_we_mux_s   <= ram_write_en_s;
+            end if;
+
+        end if;
+    end process;
+
     process(clk, reset)
     begin
         if reset = '0' then
@@ -375,9 +409,9 @@ begin
     u_ram: ram
         port map (
             clk      => clk,
-            ram_we   => ram_write_en_s,
-            ram_re   => ram_read_en_s,
-            ram_addr => ram_addr_s,
+            ram_we   => ram_we_mux_s,
+            ram_re   => ram_re_mux_s,
+            ram_addr => ram_addr_mux_s,
             ram_din  => ram_din_s,
             ram_dout => ram_dout_s
         );
@@ -426,8 +460,7 @@ begin
             st_dout        => st_dout_s,
             beep           => sound_beep,
             push           => stack_push_en_s,
-            pop            => stack_pop_en_s,
-            stack_dout     => stack_dout_s
+            pop            => stack_pop_en_s
         );
 
     u_control_system: control_system
@@ -445,6 +478,7 @@ begin
             dt_in           => dt_dout_s, 
             st_in           => st_dout_s,
             bcd_code        => bcd_code_s,
+            bcd_en          => bcd_en_s,
             rand_val        => rand_val_s,
             alu_result_in   => alu_out_s,
             alu_i_add_in    => i_add_s,
@@ -491,6 +525,8 @@ begin
             clk             => clk,
             reset           => reset,
             clk_25          => clk_25_s,
+            sys_ram_addr    => sys_ram_addr_s,
+            sys_ram_dout    => ram_dout_s,
             ram_addr_b      => vram_addr_b_s,
             ram_dout_b      => vram_dout_b_s,
             ram_we_a        => vram_we_a_s,
@@ -518,6 +554,7 @@ begin
     u_bcd: bcd_convert
         port map (
             bin_din  => bin_din_s,
+            bcd_en   => bcd_en_s,
             bcd_code => bcd_code_s
         );
 

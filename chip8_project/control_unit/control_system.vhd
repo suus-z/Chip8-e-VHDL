@@ -52,6 +52,7 @@ entity control_system is
         video_draw_en   : out std_logic;
 
         bin_din         : out std_logic_vector(7 downto 0);
+        bcd_en          : out std_logic;
 
         pc_load_en      : out std_logic;
         pc_inc_en       : out std_logic;
@@ -96,76 +97,77 @@ architecture rtl of control_system is
 
     component control_fsm is
         port (
-        --System inputs
-        clk             : in  std_logic;
-        reset           : in  std_logic;
+            --System inputs
+            clk             : in  std_logic;
+            reset           : in  std_logic;
 
-        --Inputs from chip-8 top-level
-        pc_in           : in  std_logic_vector(11 downto 0);
-        reg_data_x_in   : in  std_logic_vector(7 downto 0);
-        reg_data_y_in   : in  std_logic_vector(7 downto 0);
-        i_reg_in        : in  std_logic_vector(11 downto 0);
-        instr_code      : in  std_logic_vector(5 downto 0); --from decoder
-        ram_dout        : in  std_logic_vector(7 downto 0);
-        nnn             : in  std_logic_vector(11 downto 0);
-        kk              : in  std_logic_vector(7 downto 0);
-        x               : in  std_logic_vector(3 downto 0);
-        y               : in  std_logic_vector(3 downto 0);
-        n               : in  std_logic_vector(3 downto 0);
-        illegal_instr   : in  std_logic;
-        key_pressed     : in  std_logic;
-        key_value_in    : in  std_logic_vector(3 downto 0);
-        dt_in           : in  std_logic_vector(7 downto 0); --delay timer
-        st_in           : in  std_logic_vector(7 downto 0); --sound timer
-        bcd_code        : in  std_logic_vector(11 downto 0); --BCD code
-        rand_val        : in  std_logic_vector(7 downto 0);
-        alu_result_in   : in  std_logic_vector(7 downto 0);  
-        alu_i_add_in    : in  std_logic_vector(11 downto 0); 
-        vf_flag_in      : in  std_logic;
+            --Inputs from chip-8 top-level
+            pc_in           : in  std_logic_vector(11 downto 0);
+            reg_data_x_in   : in  std_logic_vector(7 downto 0);
+            reg_data_y_in   : in  std_logic_vector(7 downto 0);
+            i_reg_in        : in  std_logic_vector(11 downto 0);
+            instr_code      : in  std_logic_vector(5 downto 0); --from decoder
+            ram_dout        : in  std_logic_vector(7 downto 0);
+            nnn             : in  std_logic_vector(11 downto 0);
+            kk              : in  std_logic_vector(7 downto 0);
+            x               : in  std_logic_vector(3 downto 0);
+            y               : in  std_logic_vector(3 downto 0);
+            n               : in  std_logic_vector(3 downto 0);
+            illegal_instr   : in  std_logic;
+            key_pressed     : in  std_logic;
+            key_value_in    : in  std_logic_vector(3 downto 0);
+            dt_in           : in  std_logic_vector(7 downto 0); --delay timer
+            st_in           : in  std_logic_vector(7 downto 0); --sound timer
+            bcd_code        : in  std_logic_vector(11 downto 0); --BCD code
+            rand_val        : in  std_logic_vector(7 downto 0);
+            alu_result_in   : in  std_logic_vector(7 downto 0);  
+            alu_i_add_in    : in  std_logic_vector(11 downto 0); 
+            vf_flag_in      : in  std_logic;
 
-        --Outputs
-        ram_read_en     : out std_logic;
-        ram_addr_out    : out std_logic_vector(11 downto 0);
-        ram_write_en    : out std_logic;
-        ram_din         : out std_logic_vector(7 downto 0);
-        stack_push_en   : out std_logic;
-        stack_pop_en    : out std_logic;
+            --Outputs
+            ram_read_en     : out std_logic;
+            ram_addr_out    : out std_logic_vector(11 downto 0);
+            ram_write_en    : out std_logic;
+            ram_din         : out std_logic_vector(7 downto 0);
+            stack_push_en   : out std_logic;
+            stack_pop_en    : out std_logic;
 
-        key_check_en    : out std_logic;
+            key_check_en    : out std_logic;
 
-        dt_load_en      : out std_logic;
-        dt_din          : out std_logic_vector(7 downto 0); --data for delay timer
-        st_load_en      : out std_logic;
-        st_din          : out std_logic_vector(7 downto 0); --data for sound timer
+            dt_load_en      : out std_logic;
+            dt_din          : out std_logic_vector(7 downto 0); --data for delay timer
+            st_load_en      : out std_logic;
+            st_din          : out std_logic_vector(7 downto 0); --data for sound timer
 
-        video_clear_en  : out std_logic; --signal to clear the screen
-        video_draw_en   : out std_logic; --signal to draw in the screen
+            video_clear_en  : out std_logic; --signal to clear the screen
+            video_draw_en   : out std_logic; --signal to draw in the screen
 
-        bin_din         : out std_logic_vector(7 downto 0);
+            bin_din         : out std_logic_vector(7 downto 0);
+            bcd_en          : out std_logic;
 
-        pc_load_en      : out std_logic; --load PC from immediate nnn (pc_load_nnn_en)
-        pc_inc_en       : out std_logic;
-        pc_skip_en      : out std_logic;
-        pc_addr_out     : out std_logic_vector(11 downto 0);
-        pc_ret_en       : out std_logic; --request PC load from stack (RET)
-        pc_jump_v0_en   : out std_logic; --request PC = nnn + V0 (JP V0)
+            pc_load_en      : out std_logic; --load PC from immediate nnn (pc_load_nnn_en)
+            pc_inc_en       : out std_logic;
+            pc_skip_en      : out std_logic;
+            pc_addr_out     : out std_logic_vector(11 downto 0);
+            pc_ret_en       : out std_logic; --request PC load from stack (RET)
+            pc_jump_v0_en   : out std_logic; --request PC = nnn + V0 (JP V0)
 
-        reg_read_en     : out std_logic;
-        reg_write_en    : out std_logic;
-        reg_read_addr_x : out std_logic_vector(3 downto 0);
-        reg_read_addr_y : out std_logic_vector(3 downto 0);
-        reg_write_addr  : out std_logic_vector(3 downto 0);
-        reg_data        : out std_logic_vector(7 downto 0);
+            reg_read_en     : out std_logic;
+            reg_write_en    : out std_logic;
+            reg_read_addr_x : out std_logic_vector(3 downto 0);
+            reg_read_addr_y : out std_logic_vector(3 downto 0);
+            reg_write_addr  : out std_logic_vector(3 downto 0);
+            reg_data        : out std_logic_vector(7 downto 0);
 
-        i_load_en       : out std_logic;
-        i_data_in       : out std_logic_vector(11 downto 0);
-        i_inc_en        : out std_logic;
+            i_load_en       : out std_logic;
+            i_data_in       : out std_logic_vector(11 downto 0);
+            i_inc_en        : out std_logic;
 
-        alu_op          : out std_logic_vector(5 downto 0);
-        
-        latch_msb_en    : out std_logic
+            alu_op          : out std_logic_vector(5 downto 0);
+            
+            latch_msb_en    : out std_logic
         );
-    end component;
+    end component control_fsm;
 
     --Internal Signals
     signal s_nnn        : std_logic_vector(11 downto 0);
@@ -241,6 +243,7 @@ begin
             video_draw_en   => video_draw_en,
 
             bin_din         => bin_din,
+            bcd_en          => bcd_en,
 
             pc_load_en      => pc_load_en,
             pc_inc_en       => pc_inc_en,

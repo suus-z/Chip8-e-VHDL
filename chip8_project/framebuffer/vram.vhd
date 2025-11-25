@@ -4,26 +4,26 @@ use ieee.numeric_std.all;
 
 entity vram is
     generic(
-        data_width : integer := 8;
-        addr_width : integer := 8
+        vram_data_width : integer := 8;
+        vram_addr_width : integer := 8
     );
     port(
         --PORT A
         clk_a      : in std_logic;
         we_a       : in std_logic;
-        addr_a     : in std_logic_vector(addr_width - 1 downto 0);
-        din_a      : in std_logic_vector(data_width - 1 downto 0);
-        dout_a     : out std_logic_vector(data_width - 1 downto 0);
+        addr_a     : in std_logic_vector(vram_addr_width - 1 downto 0);
+        din_a      : in std_logic_vector(vram_data_width - 1 downto 0);
+        dout_a     : out std_logic_vector(vram_data_width - 1 downto 0);
         
         --PORT B
         clk_b      : in std_logic;
-        addr_b     : in std_logic_vector(addr_width - 1 downto 0);
-        dout_b     : out std_logic_vector(data_width - 1 downto 0)
+        addr_b     : in std_logic_vector(vram_addr_width - 1 downto 0);
+        dout_b     : out std_logic_vector(vram_data_width - 1 downto 0)
     );
 end vram;
 
 architecture vram_arch of vram is
-    type vram_type is array(0 to (2**addr_width - 1)) of std_logic_vector(data_width - 1 downto 0);
+    type vram_type is array(0 to (2**vram_addr_width - 1)) of std_logic_vector(vram_data_width - 1 downto 0);
     signal vram_block : vram_type;
     
     attribute ramstyle : string;

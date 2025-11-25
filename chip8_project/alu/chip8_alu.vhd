@@ -21,7 +21,7 @@ end entity chip8_alu;
 
 architecture behavioral of chip8_alu is
 begin
-    process(op_code_in, data_a_in, data_b_in)
+    process(op_code_in, data_a_in, data_b_in, i_reg_in)
         --Temporary variables to hold intermediate results
         variable temp_result_8bit  : unsigned(7 downto 0);
         variable temp_result_9bit  : unsigned(8 downto 0);
